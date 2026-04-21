@@ -107,6 +107,26 @@
   .btn-cancel { border: 1px solid var(--rule); border-radius: 8px; padding: 0 18px; height: 38px; font-size: 14px; background: transparent; color: var(--ink3); cursor: pointer; font-family: inherit; }
   .btn-confirm { border: 1px solid var(--danger); border-radius: 8px; padding: 0 18px; height: 38px; font-size: 14px; font-weight: 500; background: var(--danger); color: #fff; cursor: pointer; font-family: inherit; }
   .loading { text-align: center; padding: 4rem; color: var(--ink3); font-size: 14px; font-style: italic; }
+  .notes-section { background: #fff; border: 1px solid var(--rule); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+  .notes-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+  .notes-title { font-size: 12px; font-weight: 500; color: var(--ink3); text-transform: uppercase; letter-spacing: .07em; }
+  .note-form { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1.25rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--rule); }
+  .note-form-row { display: flex; gap: 8px; align-items: flex-start; }
+  .note-date-input { border: 1px solid var(--rule); border-radius: 6px; padding: 7px 10px; font-size: 13px; font-family: inherit; color: var(--ink); background: var(--paper); outline: none; width: 160px; flex-shrink: 0; }
+  .note-date-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px #534AB715; }
+  .note-textarea { border: 1px solid var(--rule); border-radius: 6px; padding: 8px 10px; font-size: 14px; font-family: inherit; color: var(--ink); background: var(--paper); outline: none; resize: vertical; min-height: 80px; line-height: 1.6; flex: 1; }
+  .note-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px #534AB715; }
+  .btn-save-note { border: 1px solid var(--accent); border-radius: 6px; padding: 0 16px; height: 34px; font-size: 13px; font-weight: 500; background: var(--accent); color: #fff; cursor: pointer; font-family: inherit; transition: all .15s; white-space: nowrap; align-self: flex-end; }
+  .btn-save-note:hover { background: var(--accent-l); color: var(--accent); }
+  .btn-save-note:disabled { opacity: .6; cursor: not-allowed; }
+  .note-entry { padding: 12px 0; border-bottom: 1px solid var(--paper2); }
+  .note-entry:last-child { border-bottom: none; padding-bottom: 0; }
+  .note-entry-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .note-entry-date { font-size: 12px; font-weight: 500; color: var(--ink3); }
+  .note-entry-text { font-size: 14px; color: var(--ink); line-height: 1.7; white-space: pre-wrap; }
+  .btn-delete-note { border: none; background: none; color: var(--ink3); cursor: pointer; font-size: 12px; padding: 2px 6px; border-radius: 4px; font-family: inherit; }
+  .btn-delete-note:hover { background: var(--danger-l); color: #791F1F; }
+  .notes-empty { font-size: 13px; color: var(--ink3); font-style: italic; }
   .empty { text-align: center; padding: 4rem; color: var(--ink3); font-size: 14px; font-style: italic; }
 </style>
 </head>
@@ -157,6 +177,23 @@
       </div>
       <div class="section-title" id="d-checkin-title"></div>
       <div class="checkin-list" id="checkin-list"></div>
+
+      <!-- Meeting notes -->
+      <div class="notes-section" style="margin-top:1.5rem;">
+        <div class="notes-header">
+          <div class="notes-title">Meeting notes</div>
+        </div>
+        <div class="note-form">
+          <div class="note-form-row">
+            <input type="date" class="note-date-input" id="note-date" />
+            <textarea class="note-textarea" id="note-text" placeholder="Notes from this meeting..."></textarea>
+          </div>
+          <div style="display:flex;justify-content:flex-end;">
+            <button class="btn-save-note" id="note-save-btn" onclick="saveNote()">Save note</button>
+          </div>
+        </div>
+        <div id="notes-list"></div>
+      </div>
     </div>
   </main>
 </div>
@@ -399,7 +436,69 @@ function showStudent(i){
       </div>`;
     list.appendChild(card);
   });
+  // Set today as default note date
+  const today = new Date().toISOString().split('T')[0];
+  const noteDateEl = document.getElementById('note-date');
+  if (noteDateEl) noteDateEl.value = today;
+
+  // Render notes
+  renderNotes(s.notes || []);
+
   window.scrollTo(0,0);
+}
+
+function renderNotes(notes) {
+  const list = document.getElementById('notes-list');
+  if (!notes.length) {
+    list.innerHTML = '<p class="notes-empty">No meeting notes yet. Add your first note above.</p>';
+    return;
+  }
+  list.innerHTML = notes.map(n => {
+    const d = new Date(n.meeting_date + 'T12:00:00').toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+    return `<div class="note-entry">
+      <div class="note-entry-header">
+        <span class="note-entry-date">${d}</span>
+        <button class="btn-delete-note" onclick="deleteNote(${n.id})">Delete</button>
+      </div>
+      <div class="note-entry-text">${n.note.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+    </div>`;
+  }).join('');
+}
+
+async function saveNote() {
+  const s = allData[curIdx]; if (!s) return;
+  const date = document.getElementById('note-date').value;
+  const text = document.getElementById('note-text').value.trim();
+  if (!text) return;
+  const btn = document.getElementById('note-save-btn');
+  btn.textContent = 'Saving…'; btn.disabled = true;
+  try {
+    const r = await fetch('/api/notes', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ email: s.email, meetingDate: date, note: text })
+    });
+    const d = await r.json();
+    if (d.ok) {
+      const newNote = { id: d.id, meeting_date: date, note: text };
+      if (!s.notes) s.notes = [];
+      s.notes.unshift(newNote);
+      renderNotes(s.notes);
+      document.getElementById('note-text').value = '';
+    }
+  } catch(e) { alert('Could not save note. Please try again.'); }
+  btn.textContent = 'Save note'; btn.disabled = false;
+}
+
+async function deleteNote(id) {
+  const s = allData[curIdx]; if (!s) return;
+  try {
+    const r = await fetch('/api/notes/' + id, { method: 'DELETE' });
+    if (r.ok) {
+      s.notes = (s.notes || []).filter(n => n.id !== id);
+      renderNotes(s.notes);
+    }
+  } catch(e) { alert('Could not delete note. Please try again.'); }
 }
 
 function toggleCard(card){card.classList.toggle('open');}
