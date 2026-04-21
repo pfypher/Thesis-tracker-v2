@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1.0" />
+<title>Thesis context profile</title>
+<style>
+  :root{--a:#534AB7;--al:#EEEDFE;--am:#7F77DD;--ab:#AFA9EC;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:#f5f4f0;font-family:system-ui,sans-serif;color:#1a1a1a;}
+  .wrap{max-width:680px;margin:0 auto;padding:2.5rem 1.25rem 4rem;}
+  .badge{display:inline-flex;align-items:center;gap:6px;background:var(--al);border:1px solid var(--ab);border-radius:999px;padding:4px 12px;font-size:12px;font-weight:500;color:var(--a);margin-bottom:1.5rem;}
+  .badge-dot{width:6px;height:6px;border-radius:50%;background:var(--a);}
+  h1{font-size:22px;font-weight:500;margin:0 0 6px;}
+  .sub{font-size:14px;color:#666;margin:0 0 2rem;line-height:1.6;}
+  .prog{display:flex;gap:6px;margin-bottom:2rem;}
+  .seg{height:3px;flex:1;border-radius:9px;background:#ddd;transition:background .3s;}
+  .seg.done{background:var(--a);}.seg.active{background:var(--am);}
+  .step{display:none;}.step.on{display:block;}
+  .stag{font-size:11px;font-weight:600;color:var(--a);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px;}
+  .stitle{font-size:20px;font-weight:500;margin:0 0 6px;}
+  .sdesc{font-size:14px;color:#666;margin:0 0 1.5rem;line-height:1.6;}
+  .fg{margin-bottom:1.25rem;}
+  label.fl{font-size:13px;font-weight:500;color:#555;display:block;margin-bottom:5px;}
+  .hint{font-size:12px;color:#aaa;display:block;margin-bottom:6px;}
+  input[type=text],input[type=email],input[type=month],textarea,select{width:100%;border:1px solid #ddd;border-radius:8px;padding:9px 12px;font-size:15px;font-family:inherit;color:#1a1a1a;background:#fff;outline:none;transition:border .15s;}
+  input:focus,textarea:focus,select:focus{border-color:var(--am);box-shadow:0 0 0 3px #534AB720;}
+  textarea{resize:vertical;min-height:90px;line-height:1.6;}
+  .nav{display:flex;justify-content:space-between;align-items:center;margin-top:2rem;}
+  .btn{border-radius:8px;height:38px;padding:0 20px;font-size:14px;cursor:pointer;font-family:inherit;transition:all .15s;}
+  .bbk{border:1px solid #ddd;background:transparent;color:#777;}.bbk:hover{background:#eee;}
+  .bpr{border:1px solid var(--a);background:var(--a);color:#fff;font-weight:500;}.bpr:hover{background:var(--am);}.bpr:disabled{opacity:.6;cursor:not-allowed;}
+
+  /* Chapter builder */
+  .ch-card{background:#fff;border:1px solid #e0ddd7;border-radius:8px;padding:12px 14px;margin-bottom:8px;}
+  .ch-head{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+  .ch-num{width:24px;height:24px;border-radius:50%;background:var(--al);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:var(--a);flex-shrink:0;}
+  .ch-head input{flex:1;height:32px;font-size:14px;}
+  .rb{border:none;background:none;color:#ccc;cursor:pointer;font-size:18px;padding:0 4px;line-height:1;flex-shrink:0;}.rb:hover{color:#555;}
+  .ch-card textarea{min-height:60px;font-size:14px;}
+  .add-btn{border:1px dashed #ccc;border-radius:8px;padding:9px 14px;font-size:13px;background:transparent;color:#888;cursor:pointer;font-family:inherit;width:100%;margin-top:4px;transition:all .15s;}
+  .add-btn:hover{border-color:var(--am);color:var(--a);background:var(--al);}
+
+  /* Milestones */
+  .ms-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+  .ms-dot{width:8px;height:8px;border-radius:50%;background:var(--am);flex-shrink:0;}
+  .ms-name{flex:1;height:34px;font-size:13px;}
+  .ms-month{width:160px;flex-shrink:0;height:34px;font-size:13px;}
+  .col-heads{display:flex;gap:8px;margin-bottom:4px;padding-left:16px;}
+  .col-h{font-size:11px;color:#aaa;font-weight:500;text-transform:uppercase;letter-spacing:.05em;}
+  .sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+  .edit-tog{font-size:12px;color:var(--a);background:none;border:none;cursor:pointer;padding:2px 8px;border-radius:6px;font-family:inherit;}
+  .edit-tog:hover{background:var(--al);}
+
+  /* Stage selector */
+  .stage-list{display:flex;flex-direction:column;gap:6px;}
+  .stage-item{display:flex;align-items:center;gap:8px;}
+  .stage-radio{accent-color:var(--a);width:15px;height:15px;flex-shrink:0;cursor:pointer;}
+  .stage-item label{font-size:14px;color:#1a1a1a;cursor:pointer;flex:1;}
+  .stage-item input[type=text]{flex:1;height:32px;font-size:14px;}
+
+  /* Success */
+  .sw{text-align:center;padding:3rem 1rem;}
+  .si{width:56px;height:56px;border-radius:50%;background:var(--al);margin:0 auto 1.25rem;display:flex;align-items:center;justify-content:center;}
+  .sw h2{font-size:20px;font-weight:500;margin:0 0 8px;}
+  .sw p{font-size:14px;color:#666;margin:0 0 1.5rem;line-height:1.6;}
+  .summary{background:#eeecea;border-radius:10px;padding:1.25rem;text-align:left;margin-bottom:1.5rem;}
+  .sum-row{display:flex;gap:8px;font-size:13px;margin-bottom:6px;}
+  .sum-key{color:#aaa;width:120px;flex-shrink:0;}
+  .sum-val{color:#1a1a1a;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="badge"><span class="badge-dot"></span>One-time setup</div>
+  <h1>Thesis context profile</h1>
+  <p class="sub">Complete this once so your supervisor has a full picture of your project. Your regular check-ins will build on this foundation.</p>
+  <div class="prog" id="prog"></div>
+
+  <!-- Step 1: Topic -->
+  <div id="s0" class="step on">
+    <div class="stag">Your topic</div>
+    <div class="stitle">What is your thesis about?</div>
+    <div class="sdesc">Give your supervisor a clear sense of your research focus — what question you're asking and what field it sits within.</div>
+    <div class="fg"><label class="fl">Full name</label><input type="text" id="f-name" placeholder="Your name" /></div>
+    <div class="fg"><label class="fl">Email address</label><input type="email" id="f-email" placeholder="your@email.com" /></div>
+    <div class="fg"><label class="fl">Working title</label><input type="text" id="f-title" placeholder="e.g. The role of X in Y..." /></div>
+    <div class="fg">
+      <label class="fl">Research question or central argument</label>
+      <span class="hint">In one or two sentences, what is the core question your thesis seeks to answer?</span>
+      <textarea id="f-rq" placeholder="e.g. This thesis asks how..."></textarea>
+    </div>
+    <div class="fg"><label class="fl">Discipline and field</label><input type="text" id="f-field" placeholder="e.g. History — early modern Europe" /></div>
+    <div class="nav"><span style="font-size:13px;color:#aaa;">Step 1 of 3</span><button class="btn bpr" onclick="goTo(1)">Continue</button></div>
+  </div>
+
+  <!-- Step 2: Chapter outline -->
+  <div id="s1" class="step">
+    <div class="stag">Chapter outline</div>
+    <div class="stitle">What is the structure of your thesis?</div>
+    <div class="sdesc">Add each chapter with a title and a short description of what it covers. Don't worry if the structure is still evolving — this is a working outline, not a commitment.</div>
+    <div id="ch-list"></div>
+    <button class="add-btn" onclick="addChapter()">+ Add a chapter</button>
+    <div class="nav" style="margin-top:1.5rem;"><button class="btn bbk" onclick="goTo(0)">Back</button><button class="btn bpr" onclick="goTo(2)">Continue</button></div>
+  </div>
+
+  <!-- Step 3: Timeline -->
+  <div id="s2" class="step">
+    <div class="stag">Timeline</div>
+    <div class="stitle">When do you plan to complete your thesis?</div>
+    <div class="sdesc">Setting out your key milestones helps your supervisor support you at the right moments.</div>
+
+    <div class="fg">
+      <label class="fl">Submission deadline</label>
+      <input type="month" id="f-deadline" style="width:200px;" />
+    </div>
+
+    <div class="fg" style="margin-top:1.5rem;">
+      <div class="sec-head">
+        <div><label class="fl" style="margin-bottom:2px;">Key milestones</label><span class="hint" style="margin-bottom:0;">Estimate the month you expect to reach each stage.</span></div>
+        <button class="edit-tog" id="ms-tog" onclick="toggleMsEdit()">Edit labels</button>
+      </div>
+      <div class="col-heads"><span class="col-h" style="flex:1;">Milestone</span><span class="col-h" style="width:160px;">Target month</span></div>
+      <div id="ms-list"></div>
+      <button class="add-btn" id="ms-add" onclick="addMilestone()" style="display:none;margin-top:6px;">+ Add a milestone</button>
+    </div>
+
+    <div class="fg" style="margin-top:1.5rem;">
+      <div class="sec-head">
+        <div><label class="fl" style="margin-bottom:2px;">Current stage</label><span class="hint" style="margin-bottom:0;">Where are you in the process right now?</span></div>
+        <button class="edit-tog" id="st-tog" onclick="toggleStEdit()">Edit options</button>
+      </div>
+      <div id="st-list" class="stage-list"></div>
+      <button class="add-btn" id="st-add" onclick="addStage()" style="display:none;margin-top:6px;">+ Add an option</button>
+    </div>
+
+    <div class="fg" style="margin-top:1rem;">
+      <label class="fl">Any concerns about your timeline?</label>
+      <textarea id="f-concerns" placeholder="e.g. I'm worried about the archival research taking longer than expected because..." style="min-height:70px;"></textarea>
+    </div>
+
+    <div class="nav"><button class="btn bbk" onclick="goTo(1)">Back</button><button class="btn bpr" id="sub-btn" onclick="submitProfile()">Save context profile</button></div>
+  </div>
+
+  <!-- Success -->
+  <div id="s-done" class="step">
+    <div class="sw">
+      <div class="si"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="13" stroke="#534AB7" stroke-width="1.5"/><path d="M8 14.5l4 4 8-9" stroke="#534AB7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <h2>Context profile saved</h2>
+      <p>Your supervisor now has a full picture of your project. You won't need to fill this in again — your regular check-ins will build on this profile.</p>
+      <div class="summary" id="summary"></div>
+      <p style="font-size:13px;color:#aaa;margin-bottom:1.5rem;">Ready to submit your first progress check-in?</p>
+      <a href="/" class="btn bpr" style="display:inline-block;text-decoration:none;line-height:38px;">Go to check-in form</a>
+    </div>
+  </div>
+</div>
+
+<script>
+let cur = 0;
+let chapters = [], chCount = 0;
+let milestones = [], msCount = 0;
+let stages = [], stCount = 0;
+let msEditing = false, stEditing = false;
+let selectedStage = null;
+
+const defaultMilestones = ['Literature review complete','Research and archival work complete','Analysis complete','Full draft to supervisor','Final revisions complete'];
+const defaultStages = ['Early planning and scoping','Literature review','Research and archival work','Writing up','Revising and editing','Final preparation for submission'];
+
+function upProg() {
+  const b = document.getElementById('prog'); b.innerHTML = '';
+  for (let i = 0; i < 3; i++) { const s = document.createElement('div'); s.className = 'seg'+(i<cur?' done':i===cur?' active':''); b.appendChild(s); }
+}
+
+function goTo(n) {
+  document.getElementById('s'+cur).classList.remove('on');
+  cur = n;
+  (document.getElementById('s'+cur)||document.getElementById('s-done')).classList.add('on');
+  upProg(); window.scrollTo(0,0);
+}
+
+// ── Chapters ──────────────────────────────────────────────────────────────────
+function addChapter() {
+  chCount++; const id = chCount; chapters.push(id);
+  const list = document.getElementById('ch-list');
+  const card = document.createElement('div'); card.className = 'ch-card'; card.id = 'ch'+id;
+  card.innerHTML = '<div class="ch-head"><div class="ch-num" id="chn'+id+'">'+chapters.length+'</div><input type="text" placeholder="Chapter title" id="cht'+id+'" /><button class="rb" onclick="rmChapter('+id+')">×</button></div><textarea placeholder="Briefly describe what this chapter covers..." id="chd'+id+'" style="min-height:60px;font-size:14px;"></textarea>';
+  list.appendChild(card);
+}
+
+function rmChapter(id) {
+  document.getElementById('ch'+id).remove();
+  chapters = chapters.filter(c=>c!==id);
+  chapters.forEach((cid,idx)=>{ const n=document.getElementById('chn'+cid); if(n) n.textContent=idx+1; });
+}
+
+// ── Milestones ────────────────────────────────────────────────────────────────
+function renderMilestones() {
+  const list = document.getElementById('ms-list'); list.innerHTML = '';
+  milestones.forEach(ms => {
+    const row = document.createElement('div'); row.className = 'ms-row'; row.id = 'ms'+ms.id;
+    if (msEditing) {
+      row.innerHTML = '<span class="ms-dot"></span><input type="text" class="ms-name" value="'+ms.label+'" oninput="updateMsLabel('+ms.id+',this.value)" /><input type="month" class="ms-month" value="'+ms.month+'" onchange="updateMsMonth('+ms.id+',this.value)" /><button class="rb" onclick="rmMilestone('+ms.id+')">×</button>';
+    } else {
+      row.innerHTML = '<span class="ms-dot"></span><span style="flex:1;font-size:13px;color:#666;">'+ms.label+'</span><input type="month" class="ms-month" value="'+ms.month+'" onchange="updateMsMonth('+ms.id+',this.value)" />';
+    }
+    list.appendChild(row);
+  });
+}
+
+function toggleMsEdit() {
+  msEditing = !msEditing;
+  document.getElementById('ms-tog').textContent = msEditing ? 'Done editing' : 'Edit labels';
+  document.getElementById('ms-add').style.display = msEditing ? 'block' : 'none';
+  renderMilestones();
+}
+
+function addMilestone() { msCount++; milestones.push({id:msCount,label:'New milestone',month:''}); renderMilestones(); }
+function rmMilestone(id) { milestones = milestones.filter(m=>m.id!==id); renderMilestones(); }
+function updateMsLabel(id,v) { const m=milestones.find(m=>m.id===id); if(m) m.label=v; }
+function updateMsMonth(id,v) { const m=milestones.find(m=>m.id===id); if(m) m.month=v; }
+
+// ── Stages ────────────────────────────────────────────────────────────────────
+function renderStages() {
+  const list = document.getElementById('st-list'); list.innerHTML = '';
+  stages.forEach(st => {
+    const row = document.createElement('div'); row.className = 'stage-item'; row.id = 'st'+st.id;
+    if (stEditing) {
+      row.innerHTML = '<input type="text" value="'+st.label+'" style="flex:1;height:32px;font-size:14px;" oninput="updateStLabel('+st.id+',this.value)" /><button class="rb" onclick="rmStage('+st.id+')">×</button>';
+    } else {
+      const chk = selectedStage===st.id ? 'checked' : '';
+      row.innerHTML = '<input type="radio" class="stage-radio" name="stage" id="str'+st.id+'" '+chk+' onchange="selectedStage='+st.id+'" /><label for="str'+st.id+'">'+st.label+'</label>';
+    }
+    list.appendChild(row);
+  });
+}
+
+function toggleStEdit() {
+  stEditing = !stEditing;
+  document.getElementById('st-tog').textContent = stEditing ? 'Done editing' : 'Edit options';
+  document.getElementById('st-add').style.display = stEditing ? 'block' : 'none';
+  renderStages();
+}
+
+function addStage() { stCount++; stages.push({id:stCount,label:'New stage'}); renderStages(); }
+function rmStage(id) { stages=stages.filter(s=>s.id!==id); if(selectedStage===id) selectedStage=null; renderStages(); }
+function updateStLabel(id,v) { const s=stages.find(s=>s.id===id); if(s) s.label=v; }
+
+// ── Submit ────────────────────────────────────────────────────────────────────
+async function submitProfile() {
+  const btn = document.getElementById('sub-btn');
+  btn.textContent = 'Saving…'; btn.disabled = true;
+
+  const chapterData = chapters.map(id => ({
+    title: (document.getElementById('cht'+id)||{}).value || '',
+    description: (document.getElementById('chd'+id)||{}).value || ''
+  }));
+
+  const stageObj = stages.find(s => s.id === selectedStage);
+
+  const body = {
+    name: document.getElementById('f-name').value.trim(),
+    email: document.getElementById('f-email').value.trim(),
+    thesis: document.getElementById('f-title').value.trim(),
+    researchQuestion: document.getElementById('f-rq').value.trim(),
+    field: document.getElementById('f-field').value.trim(),
+    chapters: chapterData,
+    deadline: document.getElementById('f-deadline').value,
+    milestones: milestones,
+    currentStage: stageObj ? stageObj.label : '',
+    timelineConcerns: document.getElementById('f-concerns').value.trim()
+  };
+
+  try {
+    await fetch('/api/profiles', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+  } catch(e) { console.error(e); }
+
+  // Show summary
+  const titleVal = body.thesis || '(not provided)';
+  const stageVal = body.currentStage || '(not selected)';
+  const deadlineVal = body.deadline || '(not set)';
+  document.getElementById('summary').innerHTML =
+    '<div class="sum-row"><span class="sum-key">Working title</span><span class="sum-val">'+(titleVal.length>60?titleVal.slice(0,60)+'…':titleVal)+'</span></div>'+
+    '<div class="sum-row"><span class="sum-key">Chapters</span><span class="sum-val">'+chapterData.length+' chapter'+(chapterData.length!==1?'s':'')+' outlined</span></div>'+
+    '<div class="sum-row"><span class="sum-key">Current stage</span><span class="sum-val">'+stageVal+'</span></div>'+
+    '<div class="sum-row"><span class="sum-key">Submission</span><span class="sum-val">'+deadlineVal+'</span></div>';
+
+  btn.textContent = 'Save context profile'; btn.disabled = false;
+  goTo(99);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+defaultMilestones.forEach(label => { msCount++; milestones.push({id:msCount,label,month:''}); });
+defaultStages.forEach(label => { stCount++; stages.push({id:stCount,label}); });
+addChapter(); addChapter(); addChapter();
+renderMilestones(); renderStages(); upProg();
+</script>
+</body>
+</html>
