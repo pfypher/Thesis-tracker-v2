@@ -8,7 +8,7 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const resend = new Resend(process.env.RESEND_API_KEY);
-const db = new Database('thesis.db');
+const db = new Database(process.env.DATABASE_URL || 'thesis.db');
 
 // ── Config ───────────────────────────────────────────────────────────────────
 const SUPERVISOR_EMAIL    = process.env.SUPERVISOR_EMAIL;
