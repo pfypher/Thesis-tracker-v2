@@ -3,99 +3,399 @@
 <head>
 <meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1.0" />
 <title>Supervisor dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  *{box-sizing:border-box;}
-  body{margin:0;background:#f5f4f0;font-family:system-ui,sans-serif;color:#1a1a1a;}
-  .wrap{max-width:760px;margin:0 auto;padding:2.5rem 1.25rem 4rem;}
-  .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;}
-  h1{font-size:22px;font-weight:500;margin:0;}
-  .logout{font-size:13px;color:#aaa;text-decoration:none;border:1px solid #ddd;border-radius:6px;padding:5px 12px;transition:all .15s;}
-  .logout:hover{background:#eee;color:#555;}
-  .metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:1.5rem;}
-  .mc{background:#fff;border:1px solid #e8e6e1;border-radius:10px;padding:14px;}
-  .ml{font-size:12px;color:#aaa;margin-bottom:4px;}
-  .mv{font-size:22px;font-weight:500;}
-  .ms{font-size:11px;color:#ccc;margin-top:2px;}
-  .alert{background:#FCEBEB;border:1px solid #F09595;border-radius:8px;padding:10px 14px;font-size:13px;color:#791F1F;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
-  .adot{width:8px;height:8px;border-radius:50%;background:#E24B4A;flex-shrink:0;}
-  .sec-title{font-size:12px;font-weight:600;color:#aaa;text-transform:uppercase;letter-spacing:.06em;margin:0 0 12px;}
-  .sc{background:#fff;border:1px solid #e8e6e1;border-radius:10px;padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:border-color .15s;}
-  .sc:hover{border-color:#AFA9EC;}
-  .sch{display:flex;align-items:center;gap:12px;}
-  .av{width:38px;height:38px;border-radius:50%;background:#EEEDFE;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;color:#534AB7;flex-shrink:0;}
-  .si{flex:1;min-width:0;}
-  .sn{font-size:15px;font-weight:500;margin:0 0 2px;}
-  .sm{font-size:12px;color:#aaa;}
-  .abadge{display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0;}
-  .anum{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;color:#fff;}
-  .atr{font-size:11px;color:#aaa;text-align:center;}
-  .spwrap{margin-top:12px;padding-top:12px;border-top:1px solid #eee;display:none;}
-  .spwrap.open{display:block;}
-  .splbl{font-size:11px;color:#aaa;margin-bottom:6px;}
-  .spline{display:flex;align-items:flex-end;gap:4px;height:52px;}
-  .spcol{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;}
-  .spbar{width:100%;border-radius:3px 3px 0 0;min-height:3px;}
-  .spdt{font-size:10px;color:#ccc;white-space:nowrap;}
-  .empty{text-align:center;padding:3rem;color:#aaa;font-size:14px;}
-  .loading{text-align:center;padding:2rem;color:#aaa;font-size:14px;}
+  :root {
+    --ink: #1a1714;
+    --ink2: #4a4540;
+    --ink3: #8a837c;
+    --paper: #f7f4ef;
+    --paper2: #ede9e2;
+    --paper3: #e2ddd5;
+    --accent: #534AB7;
+    --accent-l: #EEEDFE;
+    --rule: #d8d2c8;
+    --c1: #1D9E75; --c2: #1D9E75; --c3: #639922; --c4: #639922;
+    --c5: #BA7517; --c6: #BA7517; --c7: #D85A30; --c8: #D85A30;
+    --c9: #E24B4A; --c10: #A32D2D;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; }
+  html { font-size: 16px; }
+  body { background: var(--paper); color: var(--ink); font-family: 'DM Sans', sans-serif; font-weight: 400; min-height: 100vh; }
+
+  /* ── Layout ── */
+  .shell { display: flex; min-height: 100vh; }
+  .sidebar { width: 280px; flex-shrink: 0; background: var(--ink); color: #fff; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+  .main { flex: 1; min-width: 0; padding: 2.5rem 3rem 4rem; }
+
+  /* ── Sidebar ── */
+  .sb-head { padding: 2rem 1.5rem 1.5rem; border-bottom: 1px solid #ffffff18; }
+  .sb-logo { font-family: 'Libre Baskerville', serif; font-size: 15px; color: #fff; margin-bottom: 4px; }
+  .sb-sub { font-size: 12px; color: #ffffff60; }
+  .sb-logout { display: block; margin: 1rem 1.5rem 0; font-size: 12px; color: #ffffff50; text-decoration: none; padding: 6px 10px; border: 1px solid #ffffff20; border-radius: 6px; text-align: center; transition: all .2s; }
+  .sb-logout:hover { color: #fff; border-color: #ffffff50; }
+  .sb-section { padding: 1rem 1.5rem 0.5rem; font-size: 10px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: #ffffff40; }
+  .sb-student { display: flex; align-items: center; gap: 10px; padding: 10px 1.5rem; cursor: pointer; transition: background .15s; border-left: 3px solid transparent; }
+  .sb-student:hover { background: #ffffff10; }
+  .sb-student.active { background: #ffffff15; border-left-color: var(--accent); }
+  .sb-avatar { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; flex-shrink: 0; background: #ffffff20; color: #fff; }
+  .sb-name { font-size: 13px; color: #ffffffcc; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sb-anx { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; color: #fff; flex-shrink: 0; }
+  .sb-alert { width: 8px; height: 8px; border-radius: 50%; background: #E24B4A; flex-shrink: 0; }
+
+  /* ── Overview panel ── */
+  .overview { display: block; }
+  .student-detail { display: none; }
+
+  .page-title { font-family: 'Libre Baskerville', serif; font-size: 28px; font-weight: 400; color: var(--ink); margin-bottom: 4px; }
+  .page-sub { font-size: 14px; color: var(--ink3); margin-bottom: 2.5rem; }
+
+  .metrics { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin-bottom: 2.5rem; }
+  .metric { background: #fff; border: 1px solid var(--rule); border-radius: 10px; padding: 1.25rem; }
+  .metric-l { font-size: 11px; color: var(--ink3); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 8px; }
+  .metric-v { font-family: 'Libre Baskerville', serif; font-size: 28px; color: var(--ink); }
+  .metric-s { font-size: 12px; color: var(--ink3); margin-top: 4px; }
+
+  .alerts { margin-bottom: 2rem; }
+  .alert { background: #FCEBEB; border: 1px solid #F09595; border-radius: 8px; padding: 10px 16px; font-size: 13px; color: #791F1F; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+  .alert-dot { width: 8px; height: 8px; border-radius: 50%; background: #E24B4A; flex-shrink: 0; }
+
+  .section-title { font-family: 'Libre Baskerville', serif; font-size: 17px; font-weight: 400; color: var(--ink); margin-bottom: 1rem; padding-bottom: 8px; border-bottom: 1px solid var(--rule); }
+
+  /* Student cards in overview */
+  .student-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+  .scard { background: #fff; border: 1px solid var(--rule); border-radius: 12px; padding: 1.25rem; cursor: pointer; transition: all .2s; }
+  .scard:hover { border-color: var(--accent); transform: translateY(-1px); box-shadow: 0 4px 16px #534AB715; }
+  .scard-top { display: flex; align-items: center; gap: 12px; margin-bottom: 1rem; }
+  .scard-av { width: 40px; height: 40px; border-radius: 50%; background: var(--accent-l); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 500; color: var(--accent); flex-shrink: 0; }
+  .scard-name { font-size: 15px; font-weight: 500; color: var(--ink); margin-bottom: 2px; }
+  .scard-meta { font-size: 12px; color: var(--ink3); }
+  .scard-anx { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 500; color: #fff; margin-left: auto; flex-shrink: 0; }
+  .sparkline { display: flex; align-items: flex-end; gap: 3px; height: 36px; margin-bottom: 8px; }
+  .spark-col { display: flex; flex-direction: column; align-items: center; gap: 2px; flex: 1; }
+  .spark-bar { width: 100%; border-radius: 2px 2px 0 0; min-height: 2px; }
+  .scard-trend { font-size: 12px; color: var(--ink3); }
+  .trend-up { color: #D85A30; } .trend-down { color: #1D9E75; } .trend-flat { color: var(--ink3); }
+
+  /* ── Student detail view ── */
+  .detail-back { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink3); cursor: pointer; margin-bottom: 1.5rem; padding: 6px 12px; border: 1px solid var(--rule); border-radius: 6px; background: #fff; transition: all .15s; }
+  .detail-back:hover { color: var(--ink); border-color: var(--ink3); }
+
+  .detail-header { display: flex; align-items: flex-start; gap: 1.5rem; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--rule); }
+  .detail-av { width: 56px; height: 56px; border-radius: 50%; background: var(--accent-l); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 500; color: var(--accent); flex-shrink: 0; }
+  .detail-name { font-family: 'Libre Baskerville', serif; font-size: 24px; font-weight: 400; color: var(--ink); margin-bottom: 4px; }
+  .detail-thesis { font-size: 14px; color: var(--ink3); font-style: italic; margin-bottom: 4px; }
+  .detail-meta { font-size: 13px; color: var(--ink3); }
+
+  /* Anxiety timeline chart */
+  .anx-chart { background: #fff; border: 1px solid var(--rule); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+  .anx-chart-title { font-size: 12px; font-weight: 500; color: var(--ink3); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 1.25rem; }
+  .anx-chart-body { display: flex; align-items: flex-end; gap: 6px; height: 80px; position: relative; }
+  .anx-gridlines { position: absolute; inset: 0; pointer-events: none; }
+  .anx-col { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; position: relative; z-index: 1; }
+  .anx-bar { width: 100%; border-radius: 4px 4px 0 0; min-height: 3px; transition: opacity .2s; }
+  .anx-bar:hover { opacity: .8; }
+  .anx-val { font-size: 11px; font-weight: 500; color: var(--ink2); }
+  .anx-date { font-size: 10px; color: var(--ink3); white-space: nowrap; }
+  .anx-empty { font-size: 13px; color: var(--ink3); font-style: italic; }
+
+  /* Check-in list */
+  .checkin-list { display: flex; flex-direction: column; gap: 14px; }
+  .checkin-card { background: #fff; border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; }
+  .checkin-head { display: flex; align-items: center; gap: 12px; padding: 1rem 1.25rem; cursor: pointer; transition: background .15s; }
+  .checkin-head:hover { background: var(--paper); }
+  .checkin-date { font-family: 'Libre Baskerville', serif; font-size: 15px; color: var(--ink); flex: 1; }
+  .checkin-pills { display: flex; align-items: center; gap: 8px; }
+  .pill { font-size: 11px; padding: 3px 10px; border-radius: 999px; font-weight: 500; }
+  .pill-mood { background: var(--paper2); color: var(--ink2); }
+  .pill-hours { background: var(--paper2); color: var(--ink2); }
+  .checkin-anx { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; color: #fff; flex-shrink: 0; }
+  .chevron { font-size: 12px; color: var(--ink3); transition: transform .2s; }
+  .checkin-card.open .chevron { transform: rotate(180deg); }
+
+  .checkin-body { display: none; padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--rule); }
+  .checkin-card.open .checkin-body { display: block; }
+
+  .qa-grid { display: grid; grid-template-columns: 160px 1fr; gap: 0; margin-top: 1rem; }
+  .qa-label { font-size: 12px; color: var(--ink3); padding: 8px 12px 8px 0; border-bottom: 1px solid var(--paper2); line-height: 1.4; }
+  .qa-value { font-size: 14px; color: var(--ink); padding: 8px 0; border-bottom: 1px solid var(--paper2); line-height: 1.6; }
+  .qa-label:last-of-type, .qa-value:last-of-type { border-bottom: none; }
+
+  .tasks-done { color: var(--c1); font-size: 13px; margin-bottom: 3px; }
+  .tasks-miss { color: var(--ink3); font-size: 13px; margin-bottom: 3px; text-decoration: line-through; }
+  .tasks-next-item { font-size: 13px; color: var(--ink2); margin-bottom: 3px; }
+
+  .loading { text-align: center; padding: 4rem; color: var(--ink3); font-size: 14px; font-style: italic; }
+  .empty { text-align: center; padding: 4rem; color: var(--ink3); font-size: 14px; font-style: italic; }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="top">
-    <h1>Supervisor dashboard</h1>
-    <a class="logout" href="/dashboard/logout">Sign out</a>
-  </div>
-  <div id="loading" class="loading">Loading…</div>
-  <div id="content" style="display:none;">
-    <div id="alerts"></div>
-    <div class="metrics">
-      <div class="mc"><div class="ml">Students</div><div class="mv" id="m1">—</div></div>
-      <div class="mc"><div class="ml">Total check-ins</div><div class="mv" id="m2">—</div></div>
-      <div class="mc"><div class="ml">Avg anxiety (latest)</div><div class="mv" id="m3">—</div><div class="ms" id="m3s"></div></div>
+<div class="shell">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sb-head">
+      <div class="sb-logo">Thesis tracker</div>
+      <div class="sb-sub">Supervisor dashboard</div>
+      <a class="sb-logout" href="/dashboard/logout">Sign out</a>
     </div>
-    <div class="sec-title">Students — anxiety over time</div>
-    <div id="students"></div>
-  </div>
-  <div id="empty" style="display:none;" class="empty">No check-ins submitted yet.</div>
+    <div class="sb-section">Overview</div>
+    <div class="sb-student active" onclick="showOverview()" id="sb-overview">
+      <div class="sb-avatar" style="background:#ffffff20;">&#9632;</div>
+      <span class="sb-name">All students</span>
+    </div>
+    <div class="sb-section">Students</div>
+    <div id="sb-students"></div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div id="loading" class="loading">Loading check-in data…</div>
+
+    <!-- Overview -->
+    <div class="overview" id="overview" style="display:none;">
+      <h1 class="page-title">All students</h1>
+      <p class="page-sub" id="overview-sub"></p>
+      <div class="metrics" id="metrics"></div>
+      <div class="alerts" id="alerts"></div>
+      <div class="section-title">Student anxiety at a glance</div>
+      <div class="student-grid" id="student-grid"></div>
+    </div>
+
+    <!-- Student detail -->
+    <div class="student-detail" id="student-detail">
+      <div class="detail-back" onclick="showOverview()">&#8592; All students</div>
+      <div class="detail-header">
+        <div class="detail-av" id="d-av"></div>
+        <div>
+          <div class="detail-name" id="d-name"></div>
+          <div class="detail-thesis" id="d-thesis"></div>
+          <div class="detail-meta" id="d-meta"></div>
+        </div>
+      </div>
+      <div class="anx-chart">
+        <div class="anx-chart-title">Anxiety over time</div>
+        <div class="anx-chart-body" id="anx-chart"></div>
+      </div>
+      <div class="section-title" id="d-checkin-title"></div>
+      <div class="checkin-list" id="checkin-list"></div>
+    </div>
+  </main>
 </div>
+
 <script>
-const AC={1:'#1D9E75',2:'#1D9E75',3:'#639922',4:'#639922',5:'#BA7517',6:'#BA7517',7:'#D85A30',8:'#D85A30',9:'#E24B4A',10:'#A32D2D'};
-async function load(){
-  let data=[];
-  try{const r=await fetch('/api/dashboard');if(r.status===401){window.location.href='/dashboard';return;}data=await r.json();}catch(e){}
-  document.getElementById('loading').style.display='none';
-  if(!data.length){document.getElementById('empty').style.display='block';return;}
-  const total=data.reduce((a,s)=>a+s.checkins.length,0);
-  const la=data.map(s=>s.checkins[s.checkins.length-1]?.anxiety).filter(Boolean);
-  const avg=la.length?(la.reduce((a,b)=>a+b,0)/la.length).toFixed(1):'—';
-  document.getElementById('m1').textContent=data.length;
-  document.getElementById('m2').textContent=total;
-  document.getElementById('m3').textContent=avg;
-  document.getElementById('m3s').textContent='across '+data.length+' student'+(data.length!==1?'s':'');
-  const aa=document.getElementById('alerts');
-  data.forEach(s=>{
-    const l=s.checkins[s.checkins.length-1];
-    if(l?.anxiety>=8){const d=document.createElement('div');d.className='alert';d.innerHTML='<span class="adot"></span><strong>'+s.name+'</strong> reported anxiety '+l.anxiety+'/10 — consider reaching out.';aa.appendChild(d);}
-  });
-  const sl=document.getElementById('students');
-  data.forEach((s,i)=>{
-    const l=s.checkins[s.checkins.length-1];
-    const p=s.checkins.length>1?s.checkins[s.checkins.length-2]:null;
-    const a=l?.anxiety||null;
-    const ac=a?AC[a]:'#ccc';
-    const diff=p?.anxiety&&a?a-p.anxiety:null;
-    const tr=diff!==null?(diff>0?'▲ +'+diff:diff<0?'▼ '+diff:'no change'):'';
-    const init=s.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-    const ld=l?new Date(l.submitted_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'';
-    const bars=s.checkins.map(c=>{const v=c.anxiety||0;const h=Math.round((v/10)*52);const d=new Date(c.submitted_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'});return'<div class="spcol"><div class="spbar" style="height:'+h+'px;background:'+(AC[v]||'#ddd')+';"></div><div class="spdt">'+d+'</div></div>';}).join('');
-    const card=document.createElement('div');card.className='sc';
-    card.onclick=()=>document.getElementById('sp'+i).classList.toggle('open');
-    card.innerHTML='<div class="sch"><div class="av">'+init+'</div><div class="si"><div class="sn">'+s.name+'</div><div class="sm">'+s.checkins.length+' check-in'+(s.checkins.length!==1?'s':'')+' · last: '+ld+'</div></div><div class="abadge"><div class="anum" style="background:'+ac+';">'+(a||'—')+'</div><div class="atr">'+tr+'</div></div></div><div class="spwrap" id="sp'+i+'"><div class="splbl">Anxiety over time (1–10)</div><div class="spline">'+bars+'</div></div>';
-    sl.appendChild(card);
-  });
-  document.getElementById('content').style.display='block';
+const AC = {1:'#1D9E75',2:'#1D9E75',3:'#639922',4:'#639922',5:'#BA7517',6:'#BA7517',7:'#D85A30',8:'#D85A30',9:'#E24B4A',10:'#A32D2D'};
+let allData = [];
+
+function anxColor(n) { return AC[n] || '#ccc'; }
+function initials(name) { return name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase(); }
+function fmtDate(str) { return new Date(str).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); }
+function fmtDateShort(str) { return new Date(str).toLocaleDateString('en-GB',{day:'numeric',month:'short'}); }
+function fmtDateMed(str) { return new Date(str).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}); }
+
+async function load() {
+  let data = [];
+  try {
+    const r = await fetch('/api/dashboard');
+    if (r.status === 401) { window.location.href = '/dashboard'; return; }
+    data = await r.json();
+  } catch(e) {}
+  allData = data;
+  document.getElementById('loading').style.display = 'none';
+
+  if (!data.length) {
+    document.getElementById('overview').style.display = 'block';
+    document.getElementById('overview').innerHTML = '<p class="empty">No check-ins submitted yet.</p>';
+    return;
+  }
+
+  buildSidebar(data);
+  buildOverview(data);
+  document.getElementById('overview').style.display = 'block';
 }
+
+function buildSidebar(data) {
+  const el = document.getElementById('sb-students');
+  el.innerHTML = '';
+  data.forEach((s, i) => {
+    const l = s.checkins[s.checkins.length - 1];
+    const anx = l?.anxiety || null;
+    const div = document.createElement('div');
+    div.className = 'sb-student';
+    div.id = 'sb-s' + i;
+    div.onclick = () => showStudent(i);
+    div.innerHTML = `
+      <div class="sb-avatar">${initials(s.name)}</div>
+      <span class="sb-name">${s.name}</span>
+      ${anx >= 8 ? '<span class="sb-alert"></span>' : ''}
+      ${anx ? `<div class="sb-anx" style="background:${anxColor(anx)}">${anx}</div>` : ''}
+    `;
+    el.appendChild(div);
+  });
+}
+
+function buildOverview(data) {
+  const total = data.reduce((a,s) => a + s.checkins.length, 0);
+  const la = data.map(s => s.checkins[s.checkins.length-1]?.anxiety).filter(Boolean);
+  const avg = la.length ? (la.reduce((a,b)=>a+b,0)/la.length).toFixed(1) : '—';
+  const high = la.filter(a => a >= 8).length;
+
+  document.getElementById('overview-sub').textContent =
+    `${data.length} student${data.length!==1?'s':''} · ${total} check-in${total!==1?'s':''} total`;
+
+  document.getElementById('metrics').innerHTML = `
+    <div class="metric"><div class="metric-l">Students</div><div class="metric-v">${data.length}</div></div>
+    <div class="metric"><div class="metric-l">Total check-ins</div><div class="metric-v">${total}</div></div>
+    <div class="metric"><div class="metric-l">Avg anxiety (latest)</div><div class="metric-v">${avg}</div><div class="metric-s">out of 10</div></div>
+    <div class="metric"><div class="metric-l">High anxiety (≥8)</div><div class="metric-v" style="color:${high>0?'#E24B4A':'inherit'}">${high}</div><div class="metric-s">student${high!==1?'s':''} flagged</div></div>
+  `;
+
+  const alerts = document.getElementById('alerts');
+  alerts.innerHTML = '';
+  data.forEach((s, i) => {
+    const l = s.checkins[s.checkins.length-1];
+    if (l?.anxiety >= 8) {
+      const d = document.createElement('div');
+      d.className = 'alert';
+      d.innerHTML = `<span class="alert-dot"></span><strong>${s.name}</strong> reported anxiety ${l.anxiety}/10 on ${fmtDateMed(l.submitted_at)} — <a href="#" onclick="showStudent(${i});return false;" style="color:#791F1F;">view their check-ins</a>`;
+      alerts.appendChild(d);
+    }
+  });
+
+  const grid = document.getElementById('student-grid');
+  grid.innerHTML = '';
+  data.forEach((s, i) => {
+    const l = s.checkins[s.checkins.length-1];
+    const p = s.checkins.length > 1 ? s.checkins[s.checkins.length-2] : null;
+    const anx = l?.anxiety || null;
+    const diff = p?.anxiety && anx ? anx - p.anxiety : null;
+    let trendHtml = '';
+    if (diff !== null) {
+      if (diff > 0) trendHtml = `<span class="trend-up">▲ ${diff} since last check-in</span>`;
+      else if (diff < 0) trendHtml = `<span class="trend-down">▼ ${Math.abs(diff)} since last check-in</span>`;
+      else trendHtml = `<span class="trend-flat">No change since last check-in</span>`;
+    }
+    const bars = s.checkins.map(c => {
+      const v = c.anxiety || 0;
+      const h = Math.round((v/10) * 36);
+      return `<div class="spark-col"><div class="spark-bar" style="height:${h}px;background:${anxColor(v)};"></div></div>`;
+    }).join('');
+
+    const card = document.createElement('div');
+    card.className = 'scard';
+    card.onclick = () => showStudent(i);
+    card.innerHTML = `
+      <div class="scard-top">
+        <div class="scard-av">${initials(s.name)}</div>
+        <div>
+          <div class="scard-name">${s.name}</div>
+          <div class="scard-meta">${s.checkins.length} check-in${s.checkins.length!==1?'s':''} · last ${fmtDateMed(l?.submitted_at||'')}</div>
+        </div>
+        ${anx ? `<div class="scard-anx" style="background:${anxColor(anx)}">${anx}</div>` : ''}
+      </div>
+      <div class="sparkline">${bars}</div>
+      <div class="scard-trend">${trendHtml}</div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function showOverview() {
+  document.getElementById('overview').style.display = 'block';
+  document.getElementById('student-detail').style.display = 'none';
+  document.querySelectorAll('.sb-student').forEach(el => el.classList.remove('active'));
+  document.getElementById('sb-overview').classList.add('active');
+}
+
+function showStudent(i) {
+  const s = allData[i];
+  if (!s) return;
+
+  document.getElementById('overview').style.display = 'none';
+  document.getElementById('student-detail').style.display = 'block';
+  document.querySelectorAll('.sb-student').forEach(el => el.classList.remove('active'));
+  const sbEl = document.getElementById('sb-s' + i);
+  if (sbEl) sbEl.classList.add('active');
+  document.getElementById('sb-overview').classList.remove('active');
+
+  // Header
+  document.getElementById('d-av').textContent = initials(s.name);
+  document.getElementById('d-name').textContent = s.name;
+  document.getElementById('d-thesis').textContent = s.thesis || 'No thesis title recorded';
+  document.getElementById('d-meta').textContent =
+    `${s.checkins.length} check-in${s.checkins.length!==1?'s':''} · enrolled ${fmtDateMed(s.enrolled||'')}`;
+
+  // Anxiety chart
+  const chart = document.getElementById('anx-chart');
+  if (!s.checkins.length) {
+    chart.innerHTML = '<span class="anx-empty">No check-ins yet</span>';
+  } else {
+    chart.innerHTML = s.checkins.map(c => {
+      const v = c.anxiety || 0;
+      const h = Math.round((v/10) * 80);
+      return `<div class="anx-col">
+        <div class="anx-val" style="color:${anxColor(v)}">${v||'—'}</div>
+        <div class="anx-bar" style="height:${h}px;background:${anxColor(v)};"></div>
+        <div class="anx-date">${fmtDateShort(c.submitted_at)}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Check-ins (newest first)
+  document.getElementById('d-checkin-title').textContent =
+    `Check-in history (${s.checkins.length})`;
+
+  const list = document.getElementById('checkin-list');
+  list.innerHTML = '';
+  const sorted = [...s.checkins].reverse();
+
+  sorted.forEach((c, ci) => {
+    const anx = c.anxiety;
+    const tasksPrev = (() => { try { return JSON.parse(c.tasks_prev||'[]'); } catch(e){return[];} })();
+    const tasksNext = (() => { try { return JSON.parse(c.tasks_next||'[]'); } catch(e){return[];} })();
+
+    const prevDoneHtml = tasksPrev.filter(t=>t.completed).map(t=>`<div class="tasks-done">✓ ${t.task}</div>`).join('');
+    const prevMissHtml = tasksPrev.filter(t=>!t.completed).map(t=>`<div class="tasks-miss">${t.task}</div>`).join('');
+    const nextHtml = tasksNext.map(t=>`<div class="tasks-next-item">· ${t}</div>`).join('');
+
+    const card = document.createElement('div');
+    card.className = 'checkin-card';
+    card.innerHTML = `
+      <div class="checkin-head" onclick="toggleCard(this.parentElement)">
+        <div class="checkin-date">${fmtDate(c.submitted_at)}</div>
+        <div class="checkin-pills">
+          ${c.mood ? `<span class="pill pill-mood">${c.mood}</span>` : ''}
+          ${c.hours ? `<span class="pill pill-hours">${c.hours}h</span>` : ''}
+        </div>
+        ${anx ? `<div class="checkin-anx" style="background:${anxColor(anx)}">${anx}</div>` : ''}
+        <span class="chevron">▼</span>
+      </div>
+      <div class="checkin-body">
+        <div class="qa-grid">
+          ${c.progress ? `<div class="qa-label">Progress</div><div class="qa-value">${c.progress}</div>` : ''}
+          ${c.excitement ? `<div class="qa-label">Excited about</div><div class="qa-value">${c.excitement}</div>` : ''}
+          ${c.challenges ? `<div class="qa-label">Challenges</div><div class="qa-value">${c.challenges}</div>` : ''}
+          ${c.blockers ? `<div class="qa-label">Blockers</div><div class="qa-value">${c.blockers}</div>` : ''}
+          ${anx ? `<div class="qa-label">Anxiety</div><div class="qa-value" style="color:${anxColor(anx)};font-weight:500;">${anx}/10</div>` : ''}
+          ${c.support ? `<div class="qa-label">Needs from you</div><div class="qa-value">${c.support}</div>` : ''}
+          ${c.other ? `<div class="qa-label">Other notes</div><div class="qa-value">${c.other}</div>` : ''}
+          ${prevDoneHtml||prevMissHtml ? `<div class="qa-label">Previous tasks</div><div class="qa-value">${prevDoneHtml}${prevMissHtml}</div>` : ''}
+          ${nextHtml ? `<div class="qa-label">Planned tasks</div><div class="qa-value">${nextHtml}</div>` : ''}
+        </div>
+      </div>
+    `;
+    // Open the most recent one by default
+    if (ci === 0) card.classList.add('open');
+    list.appendChild(card);
+  });
+
+  window.scrollTo(0, 0);
+}
+
+function toggleCard(card) {
+  card.classList.toggle('open');
+}
+
 load();
 </script>
 </body>
