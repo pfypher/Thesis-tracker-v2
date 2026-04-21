@@ -8,7 +8,7 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const resend = new Resend(process.env.RESEND_API_KEY);
-const db = new Database(process.env.DATABASE_URL || 'thesis.db');
+const db = new Database('thesis.db');
 
 // ── Config ───────────────────────────────────────────────────────────────────
 const SUPERVISOR_EMAIL    = process.env.SUPERVISOR_EMAIL;
@@ -44,6 +44,21 @@ db.exec(`
     tasks_prev    TEXT,
     submitted_at  TEXT DEFAULT (datetime('now'))
   );
+
+  CREATE TABLE IF NOT EXISTS profiles (
+    id                INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_email     TEXT NOT NULL UNIQUE,
+    student_name      TEXT NOT NULL,
+    thesis_title      TEXT,
+    research_question TEXT,
+    field             TEXT,
+    chapters          TEXT,
+    deadline          TEXT,
+    milestones        TEXT,
+    current_stage     TEXT,
+    timeline_concerns TEXT,
+    submitted_at      TEXT DEFAULT (datetime('now'))
+  );
 `);
 
 app.use(express.json());
@@ -61,6 +76,54 @@ function requireAuth(req, res, next) {
 // Student check-in form → /
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'checkin.html'));
+});
+
+
+// Thesis context profile → /profile
+app.get('/profile', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'profile.html'));
+});
+
+// ── API: Save context profile ─────────────────────────────────────────────────
+app.post('/api/profiles', async (req, res) => {
+  const { name, email, thesis, researchQuestion, field, chapters,
+          deadline, milestones, currentStage, timelineConcerns } = req.body;
+  if (!email) return res.status(400).json({ error: 'email required' });
+
+  db.prepare(`INSERT OR IGNORE INTO students (name, email, thesis) VALUES (?, ?, ?)`)
+    .run(name || 'Unknown', email, thesis || '');
+
+  db.prepare(`
+    INSERT INTO profiles
+      (student_email, student_name, thesis_title, research_question, field,
+       chapters, deadline, milestones, current_stage, timeline_concerns)
+    VALUES (?,?,?,?,?,?,?,?,?,?)
+    ON CONFLICT(student_email) DO UPDATE SET
+      student_name=excluded.student_name,
+      thesis_title=excluded.thesis_title,
+      research_question=excluded.research_question,
+      field=excluded.field,
+      chapters=excluded.chapters,
+      deadline=excluded.deadline,
+      milestones=excluded.milestones,
+      current_stage=excluded.current_stage,
+      timeline_concerns=excluded.timeline_concerns,
+      submitted_at=datetime('now')
+  `).run(email, name, thesis, researchQuestion, field,
+         JSON.stringify(chapters||[]), deadline,
+         JSON.stringify(milestones||[]), currentStage, timelineConcerns);
+
+  try {
+    await resend.emails.send({
+      from: FROM_EMAIL, to: SUPERVISOR_EMAIL,
+      subject: `Context profile submitted — ${name}`,
+      html: profileEmail({ name, email, thesis, researchQuestion, field,
+        chapters: chapters||[], deadline, currentStage, timelineConcerns,
+        dashUrl: `${APP_URL}/dashboard` }),
+    });
+  } catch(err) { console.error('Profile email error:', err); }
+
+  res.json({ ok: true });
 });
 
 // Supervisor dashboard → /dashboard
@@ -158,9 +221,10 @@ app.get('/api/dashboard', requireAuth, (req, res) => {
   const students = db.prepare(`SELECT * FROM students`).all();
   const data = students.map(s => ({
     ...s,
+    profile: db.prepare(`SELECT * FROM profiles WHERE student_email = ?`).get(s.email) || null,
     checkins: db.prepare(`
       SELECT anxiety, mood, submitted_at, hours, progress, excitement,
-             challenges, blockers, support, tasks_next
+             challenges, blockers, support, tasks_next, tasks_prev
       FROM checkins WHERE student_email = ? ORDER BY submitted_at ASC
     `).all(s.email)
   }));
@@ -255,6 +319,25 @@ function supervisorEmail({ name, email, anxiety, mood, hours, progress, exciteme
     </table>
     ${prevDone||prevMissed?`<p style="font-size:12px;color:#999;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin:0 0 8px;">Previous tasks</p><ul style="margin:0 0 20px;padding-left:20px;">${prevDone}${prevMissed}</ul>`:''}
     ${nextTasks?`<p style="font-size:12px;color:#999;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin:0 0 8px;">Planned for next two weeks</p><ul style="margin:0 0 24px;padding-left:20px;">${nextTasks}</ul>`:''}
+    <a href="${dashUrl}" style="display:inline-block;background:#534AB7;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:500;">View dashboard</a>
+  `);
+}
+
+function profileEmail({ name, email, thesis, researchQuestion, field, chapters, deadline, currentStage, timelineConcerns, dashUrl }) {
+  const chapterList = (chapters||[]).map((c,i)=>`<tr><td style="padding:8px 0;color:#999;font-size:13px;vertical-align:top;width:100px;">Chapter ${i+1}</td><td style="padding:8px 0;color:#333;font-size:14px;line-height:1.6;"><strong>${c.title||'Untitled'}</strong>${c.description?'<br>'+c.description:''}</td></tr>`).join('');
+  const row=(l,v)=>v?`<tr><td style="padding:8px 0;color:#999;font-size:13px;width:160px;vertical-align:top;">${l}</td><td style="padding:8px 0;color:#333;font-size:14px;line-height:1.6;">${v}</td></tr>`:'';
+  return emailWrap(`
+    <h2 style="margin:0 0 4px;font-size:20px;font-weight:500;">Context profile from ${name}</h2>
+    <p style="color:#999;font-size:13px;margin:0 0 24px;">${email} · ${new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #eee;margin-bottom:20px;">
+      ${row('Working title',thesis)}
+      ${row('Research question',researchQuestion)}
+      ${row('Field',field)}
+      ${row('Current stage',currentStage)}
+      ${row('Deadline',deadline)}
+      ${row('Timeline concerns',timelineConcerns)}
+    </table>
+    ${chapterList?`<p style="font-size:12px;color:#999;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin:0 0 8px;">Chapter outline</p><table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #eee;margin-bottom:24px;">${chapterList}</table>`:''}
     <a href="${dashUrl}" style="display:inline-block;background:#534AB7;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:500;">View dashboard</a>
   `);
 }
