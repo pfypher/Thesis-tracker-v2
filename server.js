@@ -223,12 +223,28 @@ app.get('/api/dashboard', requireAuth, (req, res) => {
     ...s,
     profile: db.prepare(`SELECT * FROM profiles WHERE student_email = ?`).get(s.email) || null,
     checkins: db.prepare(`
-      SELECT anxiety, mood, submitted_at, hours, progress, excitement,
+      SELECT id, anxiety, mood, submitted_at, hours, progress, excitement,
              challenges, blockers, support, tasks_next, tasks_prev
       FROM checkins WHERE student_email = ? ORDER BY submitted_at ASC
     `).all(s.email)
   }));
   res.json(data);
+});
+
+
+// ── API: Delete student ───────────────────────────────────────────────────────
+app.delete('/api/students/:email', requireAuth, (req, res) => {
+  const email = req.params.email;
+  db.prepare(`DELETE FROM checkins WHERE student_email = ?`).run(email);
+  db.prepare(`DELETE FROM profiles WHERE student_email = ?`).run(email);
+  db.prepare(`DELETE FROM students WHERE email = ?`).run(email);
+  res.json({ ok: true });
+});
+
+// ── API: Delete check-in ──────────────────────────────────────────────────────
+app.delete('/api/checkins/:id', requireAuth, (req, res) => {
+  db.prepare(`DELETE FROM checkins WHERE id = ?`).run(req.params.id);
+  res.json({ ok: true });
 });
 
 // ── Cron: Fortnightly reminders ───────────────────────────────────────────────
