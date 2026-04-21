@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1.0" />
+<title>Thesis check-in</title>
+<style>
+  :root{--a:#534AB7;--al:#EEEDFE;--am:#7F77DD;--ab:#AFA9EC;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:#f5f4f0;font-family:system-ui,sans-serif;color:#1a1a1a;}
+  .wrap{max-width:680px;margin:0 auto;padding:2.5rem 1.25rem 4rem;}
+  h1{font-size:22px;font-weight:500;margin:0 0 6px;}
+  .sub{font-size:14px;color:#666;margin:0 0 2rem;line-height:1.6;}
+  .prog{display:flex;gap:6px;margin-bottom:2rem;}
+  .seg{height:3px;flex:1;border-radius:9px;background:#ddd;transition:background .3s;}
+  .seg.done{background:var(--a);}.seg.active{background:var(--am);}
+  .step{display:none;}.step.on{display:block;}
+  .stag{font-size:11px;font-weight:600;color:var(--a);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px;}
+  .stitle{font-size:20px;font-weight:500;margin:0 0 6px;}
+  .sdesc{font-size:14px;color:#666;margin:0 0 1.5rem;line-height:1.6;}
+  .fg{margin-bottom:1.25rem;}
+  label.fl{font-size:13px;font-weight:500;color:#555;display:block;margin-bottom:5px;}
+  .hint{font-size:12px;color:#aaa;display:block;margin-bottom:6px;}
+  input[type=text],input[type=email],input[type=number],textarea{width:100%;border:1px solid #ddd;border-radius:8px;padding:9px 12px;font-size:15px;font-family:inherit;color:#1a1a1a;background:#fff;outline:none;transition:border .15s;}
+  input:focus,textarea:focus{border-color:var(--am);box-shadow:0 0 0 3px #534AB720;}
+  textarea{resize:vertical;min-height:90px;line-height:1.6;}
+  .nav{display:flex;justify-content:space-between;align-items:center;margin-top:2rem;}
+  .btn{border-radius:8px;height:38px;padding:0 20px;font-size:14px;cursor:pointer;font-family:inherit;transition:all .15s;}
+  .bbk{border:1px solid #ddd;background:transparent;color:#777;}.bbk:hover{background:#eee;}
+  .bpr{border:1px solid var(--a);background:var(--a);color:#fff;font-weight:500;}.bpr:hover{background:var(--am);}.bpr:disabled{opacity:.6;cursor:not-allowed;}
+  .prev-box{background:#eeecea;border-radius:10px;padding:14px 16px;margin-bottom:1.25rem;}
+  .prev-h{font-size:11px;font-weight:600;color:#aaa;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;}
+  .tr{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid #e0ddd7;}
+  .tr:last-child{border:none;}
+  .tc{width:16px;height:16px;flex-shrink:0;accent-color:var(--a);margin-top:2px;cursor:pointer;}
+  .tl{font-size:14px;line-height:1.5;cursor:pointer;}.tl.done{color:#aaa;text-decoration:line-through;}
+  .mg{display:flex;gap:8px;flex-wrap:wrap;}
+  .mb{border:1px solid #ddd;border-radius:8px;padding:8px 14px;font-size:14px;background:#fff;cursor:pointer;font-family:inherit;transition:all .15s;}
+  .mb.sel{border-color:var(--a);background:var(--al);color:var(--a);font-weight:500;}
+  .tir{display:flex;gap:8px;margin-bottom:8px;align-items:center;}.tir input{flex:1;}
+  .rb{border:none;background:none;color:#ccc;cursor:pointer;font-size:18px;padding:0 4px;line-height:1;}.rb:hover{color:#555;}
+  .ab{border:1px dashed #ccc;border-radius:8px;padding:9px 14px;font-size:13px;background:transparent;color:#888;cursor:pointer;font-family:inherit;width:100%;margin-top:4px;transition:all .15s;}
+  .ab:hover{border-color:var(--am);color:var(--a);background:var(--al);}
+  .as{display:flex;gap:5px;margin-top:4px;}
+  .axb{flex:1;height:40px;border:1px solid #ddd;border-radius:8px;font-size:14px;font-weight:500;background:#fff;color:#777;cursor:pointer;font-family:inherit;transition:all .15s;}
+  .axb.sel{color:#fff;border-color:transparent;}
+  .axl{display:flex;justify-content:space-between;margin-top:5px;}
+  .axlb{font-size:11px;color:#aaa;}
+  .axn{font-size:13px;margin-top:8px;min-height:18px;text-align:center;}
+  .sn{background:var(--al);border:1px solid var(--ab);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--a);margin-bottom:1.5rem;}
+  .sw{text-align:center;padding:3rem 1rem;}
+  .si{width:56px;height:56px;border-radius:50%;background:var(--al);margin:0 auto 1.25rem;display:flex;align-items:center;justify-content:center;}
+  .sw h2{font-size:20px;font-weight:500;margin:0 0 8px;}
+  .sw p{font-size:14px;color:#666;margin:0 0 1.5rem;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Thesis progress check-in</h1>
+  <p class="sub">A short reflection to keep your supervisor in the loop.</p>
+  <div class="prog" id="prog"></div>
+
+  <div id="s0" class="step on">
+    <div class="stag">Getting started</div><div class="stitle">Who are you?</div>
+    <div class="sdesc">Let's start with your details so your supervisor knows who submitted this check-in.</div>
+    <div class="fg"><label class="fl">Full name</label><input type="text" id="fn" placeholder="Your name" /></div>
+    <div class="fg"><label class="fl">Email address</label><input type="email" id="fe" placeholder="your@email.com" /></div>
+    <div class="fg"><label class="fl">Thesis title or working title</label><input type="text" id="ft" placeholder="e.g. The role of X in Y..." /></div>
+    <div class="nav"><span style="font-size:13px;color:#aaa;">Step 1 of 6</span><button class="btn bpr" onclick="goTo(1)">Continue</button></div>
+  </div>
+
+  <div id="s1" class="step">
+    <div class="stag">Progress</div><div class="stitle">What have you done since your last check-in?</div>
+    <div class="sdesc">Reflect on what you've accomplished. Your planned tasks from last time are shown below — tick anything you completed.</div>
+    <div class="prev-box"><div class="prev-h">Your tasks from last check-in</div><div id="pt"></div></div>
+    <div class="fg"><label class="fl">Anything else you worked on?</label><span class="hint">Any work not covered by the tasks above.</span><textarea id="fp" placeholder="e.g. I also attended a seminar on X..."></textarea></div>
+    <div class="fg"><label class="fl">Roughly how many hours did you spend on your thesis this period?</label><input type="number" id="fh" placeholder="e.g. 20" style="width:140px;" /></div>
+    <div class="nav"><button class="btn bbk" onclick="goTo(0)">Back</button><button class="btn bpr" onclick="goTo(2)">Continue</button></div>
+  </div>
+
+  <div id="s2" class="step">
+    <div class="stag">Engagement</div><div class="stitle">What are you enjoying or excited about?</div>
+    <div class="sdesc">Reflecting on what energises you helps both of you understand what's working well.</div>
+    <div class="fg"><label class="fl">Overall, how is your motivation right now?</label>
+      <div class="mg"><button class="mb" onclick="sm(this)">Struggling</button><button class="mb" onclick="sm(this)">Doing okay</button><button class="mb" onclick="sm(this)">Feeling good</button><button class="mb" onclick="sm(this)">Really energised</button></div>
+    </div>
+    <div class="fg" style="margin-top:1.25rem;"><label class="fl">What are you most excited or curious about right now?</label><textarea id="fex" placeholder="e.g. I've been really interested in..."></textarea></div>
+    <div class="nav"><button class="btn bbk" onclick="goTo(1)">Back</button><button class="btn bpr" onclick="goTo(3)">Continue</button></div>
+  </div>
+
+  <div id="s3" class="step">
+    <div class="stag">Challenges</div><div class="stitle">What difficulties are you running into?</div>
+    <div class="sdesc">Being honest about challenges is important. There's no wrong answer here.</div>
+    <div class="fg"><textarea id="fc" placeholder="e.g. I'm finding it hard to structure the argument in chapter 2..."></textarea></div>
+    <div class="fg"><label class="fl">Is anything blocking you from making progress?</label><textarea id="fb" placeholder="e.g. Waiting on access to an archive..."></textarea></div>
+    <div class="fg" style="margin-top:1.5rem;">
+      <label class="fl">How would you rate your anxiety level at the moment?</label>
+      <span class="hint">1 = very calm, 10 = extremely high anxiety</span>
+      <div class="as" id="axs"></div>
+      <div class="axl"><span class="axlb">Very calm</span><span class="axlb">Extremely anxious</span></div>
+      <div class="axn" id="axn"></div>
+    </div>
+    <div class="nav"><button class="btn bbk" onclick="goTo(2)">Back</button><button class="btn bpr" onclick="goTo(4)">Continue</button></div>
+  </div>
+
+  <div id="s4" class="step">
+    <div class="stag">Planning</div><div class="stitle">What will you work on in the next two weeks?</div>
+    <div class="sdesc">List the specific tasks you plan to complete before your next check-in.</div>
+    <div id="tl"></div>
+    <button class="ab" onclick="addTask()">+ Add a task</button>
+    <div class="nav" style="margin-top:1.5rem;"><button class="btn bbk" onclick="goTo(3)">Back</button><button class="btn bpr" onclick="goTo(5)">Continue</button></div>
+  </div>
+
+  <div id="s5" class="step">
+    <div class="stag">Support</div><div class="stitle">What do you need from your supervisor?</div>
+    <div class="sdesc">Let your supervisor know how they can best support you right now.</div>
+    <div class="fg"><textarea id="fsu" placeholder="e.g. I'd love feedback on the draft introduction..."></textarea></div>
+    <div class="fg"><label class="fl">Any other comments?</label><textarea id="fo" placeholder="Anything else on your mind..." style="min-height:70px;"></textarea></div>
+    <div class="sn">Submitting this form will send an email notification to your supervisor.</div>
+    <div class="nav"><button class="btn bbk" onclick="goTo(4)">Back</button><button class="btn bpr" id="subbtn" onclick="submit()">Submit check-in</button></div>
+  </div>
+
+  <div id="s-done" class="step">
+    <div class="sw">
+      <div class="si"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="13" stroke="#534AB7" stroke-width="1.5"/><path d="M8 14.5l4 4 8-9" stroke="#534AB7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <h2>Check-in submitted</h2>
+      <p>Your supervisor has been notified by email. A confirmation has been sent to your inbox.</p>
+      <button class="btn bbk" onclick="restart()">Submit another check-in</button>
+    </div>
+  </div>
+</div>
+<script>
+const AC={1:'#1D9E75',2:'#1D9E75',3:'#639922',4:'#639922',5:'#BA7517',6:'#BA7517',7:'#D85A30',8:'#D85A30',9:'#E24B4A',10:'#A32D2D'};
+const AD={1:'Very calm — things feel manageable',2:'Mostly calm with minor worries',3:'A little tension, but broadly okay',4:'Some noticeable anxiety',5:'Moderate anxiety — affecting focus at times',6:'Fairly anxious — persistent background stress',7:'Quite anxious — regularly affecting your work',8:'High anxiety — difficult to manage',9:'Very high anxiety — significantly interfering with work',10:'Extremely high anxiety — please reach out for support'};
+let cur=0,tasks=[],tc=0,anx=null,mood=null,prevData=[];
+function upProg(){const b=document.getElementById('prog');b.innerHTML='';for(let i=0;i<6;i++){const s=document.createElement('div');s.className='seg'+(i<cur?' done':i===cur?' active':'');b.appendChild(s);}}
+function goTo(n){document.getElementById('s'+cur).classList.remove('on');cur=n;(document.getElementById('s'+cur)||document.getElementById('s-done')).classList.add('on');upProg();window.scrollTo(0,0);if(n===1)loadPrev();}
+async function loadPrev(){const email=document.getElementById('fe').value.trim();const el=document.getElementById('pt');el.innerHTML='';prevData=[];if(!email){el.innerHTML='<p style="font-size:13px;color:#aaa;margin:0;">Enter your email on step 1 to load previous tasks.</p>';return;}try{const r=await fetch('/api/students/'+encodeURIComponent(email)+'/prev-tasks');const d=await r.json();prevData=d.tasks||[];}catch(e){prevData=[];}if(!prevData.length){el.innerHTML='<p style="font-size:13px;color:#aaa;margin:0;">No previous tasks found — this may be your first check-in.</p>';return;}prevData.forEach((t,i)=>{const row=document.createElement('div');row.className='tr';row.innerHTML='<input type="checkbox" class="tc" id="pt'+i+'" onchange="td(this,'+i+')" /><label class="tl" id="ptl'+i+'" for="pt'+i+'">'+t+'</label>';el.appendChild(row);});}
+function td(cb,i){document.getElementById('ptl'+i).classList.toggle('done',cb.checked);}
+function sm(el){document.querySelectorAll('.mb').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');mood=el.textContent;}
+function buildAnx(){const sc=document.getElementById('axs');sc.innerHTML='';for(let i=1;i<=10;i++){const b=document.createElement('button');b.className='axb'+(anx===i?' sel':'');b.textContent=i;b.id='ab'+i;if(anx===i){b.style.background=AC[i];b.style.borderColor='transparent';}b.onclick=()=>{anx=i;for(let j=1;j<=10;j++){const x=document.getElementById('ab'+j);if(j===i){x.classList.add('sel');x.style.background=AC[j];x.style.color='#fff';x.style.borderColor='transparent';}else{x.classList.remove('sel');x.style.background='';x.style.color='';x.style.borderColor='';}}upAxNote();};sc.appendChild(b);}upAxNote();}
+function upAxNote(){const n=document.getElementById('axn');n.textContent=anx?AD[anx]:'';n.style.color=anx?AC[anx]:'';}
+function addTask(v=''){tc++;const id=tc;tasks.push(id);const l=document.getElementById('tl');const r=document.createElement('div');r.className='tir';r.id='tr'+id;r.innerHTML='<input type="text" placeholder="e.g. Draft the next chapter section" id="ti'+id+'" value="'+v+'" /><button class="rb" onclick="rmTask('+id+')">×</button>';l.appendChild(r);}
+function rmTask(id){document.getElementById('tr'+id).remove();tasks=tasks.filter(t=>t!==id);}
+async function submit(){const btn=document.getElementById('subbtn');btn.textContent='Submitting…';btn.disabled=true;
+const tp=prevData.map((task,i)=>{const cb=document.getElementById('pt'+i);return{task,completed:cb?cb.checked:false};});
+const tn=tasks.map(id=>{const el=document.getElementById('ti'+id);return el?el.value.trim():'';}).filter(Boolean);
+await fetch('/api/checkins',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:document.getElementById('fn').value.trim(),email:document.getElementById('fe').value.trim(),thesis:document.getElementById('ft').value.trim(),anxiety:anx,mood,hours:document.getElementById('fh').value,progress:document.getElementById('fp').value,excitement:document.getElementById('fex').value,challenges:document.getElementById('fc').value,blockers:document.getElementById('fb').value,support:document.getElementById('fsu').value,other:document.getElementById('fo').value,tasksNext:tn,tasksPrev:tp})}).catch(console.error);
+btn.textContent='Submit check-in';btn.disabled=false;document.getElementById('s5').classList.remove('on');document.getElementById('s-done').classList.add('on');document.getElementById('prog').innerHTML='';window.scrollTo(0,0);}
+function restart(){cur=0;tasks=[];tc=0;anx=null;mood=null;['fn','fe','ft','fp','fh','fex','fc','fb','fsu','fo'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.querySelectorAll('.mb').forEach(b=>b.classList.remove('sel'));document.getElementById('tl').innerHTML='';document.getElementById('s-done').classList.remove('on');document.getElementById('s0').classList.add('on');buildAnx();addTask();addTask();upProg();window.scrollTo(0,0);}
+buildAnx();addTask();addTask();upProg();
+</script>
+</body>
+</html>
