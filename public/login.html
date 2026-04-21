@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1.0" />
+<title>Dashboard login</title>
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0;background:#f5f4f0;font-family:system-ui,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;}
+  .card{background:#fff;border-radius:14px;border:1px solid #e8e6e1;padding:2.5rem;width:100%;max-width:380px;margin:1rem;}
+  .logo{display:flex;align-items:center;gap:10px;margin-bottom:2rem;}
+  .logo-dot{width:32px;height:32px;border-radius:8px;background:#534AB7;display:flex;align-items:center;justify-content:center;}
+  .logo-dot svg{width:18px;height:18px;}
+  .logo-text{font-size:15px;font-weight:500;color:#1a1a1a;}
+  h2{font-size:20px;font-weight:500;margin:0 0 6px;}
+  p{font-size:14px;color:#777;margin:0 0 1.5rem;line-height:1.5;}
+  label{font-size:13px;font-weight:500;color:#555;display:block;margin-bottom:5px;}
+  input[type=password]{width:100%;border:1px solid #ddd;border-radius:8px;padding:9px 12px;font-size:15px;font-family:inherit;outline:none;margin-bottom:1rem;transition:border .15s;}
+  input[type=password]:focus{border-color:#7F77DD;box-shadow:0 0 0 3px #534AB720;}
+  button{width:100%;border:1px solid #534AB7;background:#534AB7;color:#fff;border-radius:8px;height:40px;font-size:14px;font-weight:500;font-family:inherit;cursor:pointer;transition:background .15s;}
+  button:hover{background:#7F77DD;}
+  button:disabled{opacity:.6;cursor:not-allowed;}
+  .err{font-size:13px;color:#A32D2D;margin-top:8px;display:none;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <div class="logo-dot"><svg viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="6" height="6" rx="1.5" fill="white"/><rect x="10" y="2" width="6" height="6" rx="1.5" fill="white" opacity=".6"/><rect x="2" y="10" width="6" height="6" rx="1.5" fill="white" opacity=".6"/><rect x="10" y="10" width="6" height="6" rx="1.5" fill="white" opacity=".3"/></svg></div>
+    <span class="logo-text">Thesis progress tracker</span>
+  </div>
+  <h2>Supervisor dashboard</h2>
+  <p>Enter your password to access student check-in data and anxiety trends.</p>
+  <label for="pw">Password</label>
+  <input type="password" id="pw" placeholder="Enter password" onkeydown="if(event.key==='Enter')login()" />
+  <button onclick="login()" id="btn">Sign in</button>
+  <div class="err" id="err">Incorrect password. Please try again.</div>
+</div>
+<script>
+async function login(){
+  const btn=document.getElementById('btn');
+  const pw=document.getElementById('pw').value;
+  btn.disabled=true;btn.textContent='Signing in…';
+  document.getElementById('err').style.display='none';
+  const r=await fetch('/dashboard/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})});
+  if(r.ok){window.location.href='/dashboard';}
+  else{document.getElementById('err').style.display='block';btn.disabled=false;btn.textContent='Sign in';}
+}
+</script>
+</body>
+</html>
