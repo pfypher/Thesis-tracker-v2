@@ -18,6 +18,22 @@ const APP_URL             = process.env.APP_URL          || 'http://localhost:30
 const DASHBOARD_PASSWORD  = process.env.DASHBOARD_PASSWORD || 'changeme';
 
 // ── Database setup ────────────────────────────────────────────────────────────
+// ╔══════════════════════════════════════════════════════════════════════════╗
+// ║  WARNING — DO NOT MODIFY OR REWRITE THIS SECTION                        ║
+// ║                                                                          ║
+// ║  All tables use CREATE TABLE IF NOT EXISTS. This means they are only    ║
+// ║  created once on first run. If the database file already exists on the  ║
+// ║  Railway Volume, this entire block is harmless — it will never delete,  ║
+// ║  overwrite, or reset any existing data.                                  ║
+// ║                                                                          ║
+// ║  Changing column definitions here will NOT alter existing tables.       ║
+// ║  To add new columns to existing tables, use ALTER TABLE statements       ║
+// ║  below this block instead — never rewrite CREATE TABLE statements.      ║
+// ║                                                                          ║
+// ║  The persistent database lives at the path set by DATABASE_URL          ║
+// ║  (the Railway Volume). Rewriting this section risks corrupting the       ║
+// ║  schema for all existing student data.                                   ║
+// ╚══════════════════════════════════════════════════════════════════════════╝
 db.exec(`
   CREATE TABLE IF NOT EXISTS students (
     id        INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -58,6 +74,14 @@ db.exec(`
     current_stage     TEXT,
     timeline_concerns TEXT,
     submitted_at      TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS meeting_notes (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_email TEXT NOT NULL,
+    meeting_date  TEXT NOT NULL,
+    note          TEXT NOT NULL,
+    created_at    TEXT DEFAULT (datetime('now'))
   );
 `);
 
@@ -226,17 +250,48 @@ app.get('/api/dashboard', requireAuth, (req, res) => {
       SELECT id, anxiety, mood, submitted_at, hours, progress, excitement,
              challenges, blockers, support, tasks_next, tasks_prev
       FROM checkins WHERE student_email = ? ORDER BY submitted_at ASC
+    `).all(s.email),
+    notes: db.prepare(`
+      SELECT id, meeting_date, note, created_at
+      FROM meeting_notes WHERE student_email = ? ORDER BY meeting_date DESC
     `).all(s.email)
   }));
   res.json(data);
 });
 
 
+// ── API: Get notes for a student ─────────────────────────────────────────────
+app.get('/api/notes/:email', requireAuth, (req, res) => {
+  const notes = db.prepare(`
+    SELECT id, meeting_date, note, created_at
+    FROM meeting_notes WHERE student_email = ? ORDER BY meeting_date DESC
+  `).all(req.params.email);
+  res.json(notes);
+});
+
+// ── API: Save a note ──────────────────────────────────────────────────────────
+app.post('/api/notes', requireAuth, (req, res) => {
+  const { email, meetingDate, note } = req.body;
+  if (!email || !note) return res.status(400).json({ error: 'email and note required' });
+  const result = db.prepare(`
+    INSERT INTO meeting_notes (student_email, meeting_date, note)
+    VALUES (?, ?, ?)
+  `).run(email, meetingDate || new Date().toISOString().split('T')[0], note);
+  res.json({ ok: true, id: result.lastInsertRowid });
+});
+
+// ── API: Delete a note ────────────────────────────────────────────────────────
+app.delete('/api/notes/:id', requireAuth, (req, res) => {
+  db.prepare(`DELETE FROM meeting_notes WHERE id = ?`).run(req.params.id);
+  res.json({ ok: true });
+});
+
 // ── API: Delete student ───────────────────────────────────────────────────────
 app.delete('/api/students/:email', requireAuth, (req, res) => {
   const email = req.params.email;
   db.prepare(`DELETE FROM checkins WHERE student_email = ?`).run(email);
   db.prepare(`DELETE FROM profiles WHERE student_email = ?`).run(email);
+  db.prepare(`DELETE FROM meeting_notes WHERE student_email = ?`).run(email);
   db.prepare(`DELETE FROM students WHERE email = ?`).run(email);
   res.json({ ok: true });
 });
