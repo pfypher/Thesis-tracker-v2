@@ -173,6 +173,7 @@
           <div class="detail-meta" id="d-meta"></div>
         </div>
       </div>
+      <div id="d-profile" style="display:none;"></div>
       <div class="anx-chart">
         <div class="anx-chart-title">Anxiety over time</div>
         <div class="anx-chart-body" id="anx-chart"></div>
@@ -319,11 +320,43 @@ function showStudent(i) {
   document.getElementById('sb-overview').classList.remove('active');
 
   // Header
+  const p = s.profile;
   document.getElementById('d-av').textContent = initials(s.name);
   document.getElementById('d-name').textContent = s.name;
-  document.getElementById('d-thesis').textContent = s.thesis || 'No thesis title recorded';
+  document.getElementById('d-thesis').textContent = (p && p.thesis_title) || s.thesis || 'No thesis title recorded';
   document.getElementById('d-meta').textContent =
     `${s.checkins.length} check-in${s.checkins.length!==1?'s':''} · enrolled ${fmtDateMed(s.enrolled||'')}`;
+
+  // Profile panel
+  const profEl = document.getElementById('d-profile');
+  if (p) {
+    const chapters = (() => { try { return JSON.parse(p.chapters||'[]'); } catch(e){return[];} })();
+    const milestones = (() => { try { return JSON.parse(p.milestones||'[]'); } catch(e){return[];} })();
+    const chHtml = chapters.map((c,i) =>
+      `<div style="margin-bottom:10px;"><div style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;">Chapter ${i+1}</div><div style="font-size:14px;font-weight:500;color:var(--ink);">${c.title||'Untitled'}</div>${c.description?`<div style="font-size:13px;color:var(--ink2);line-height:1.5;margin-top:2px;">${c.description}</div>`:''}</div>`
+    ).join('');
+    const msHtml = milestones.filter(m=>m.month).map(m =>
+      `<div class="qa-label">${m.label}</div><div class="qa-value">${m.month}</div>`
+    ).join('');
+    profEl.innerHTML = `
+      <div class="anx-chart" style="margin-bottom:1.5rem;">
+        <div class="anx-chart-title">Context profile</div>
+        <div class="qa-grid" style="margin-top:0;">
+          ${p.research_question?`<div class="qa-label">Research question</div><div class="qa-value">${p.research_question}</div>`:''}
+          ${p.field?`<div class="qa-label">Field</div><div class="qa-value">${p.field}</div>`:''}
+          ${p.current_stage?`<div class="qa-label">Current stage</div><div class="qa-value">${p.current_stage}</div>`:''}
+          ${p.deadline?`<div class="qa-label">Deadline</div><div class="qa-value">${p.deadline}</div>`:''}
+          ${p.timeline_concerns?`<div class="qa-label">Timeline concerns</div><div class="qa-value">${p.timeline_concerns}</div>`:''}
+        </div>
+        ${chHtml?`<div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--rule);"><div class="anx-chart-title" style="margin-bottom:12px;">Chapter outline</div>${chHtml}</div>`:''}
+        ${msHtml?`<div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--rule);"><div class="anx-chart-title" style="margin-bottom:8px;">Milestones</div><div class="qa-grid" style="margin-top:0;">${msHtml}</div></div>`:''}
+      </div>
+    `;
+    profEl.style.display = 'block';
+  } else {
+    profEl.innerHTML = `<div class="anx-chart" style="margin-bottom:1.5rem;"><div class="anx-chart-title">Context profile</div><p style="font-size:13px;color:var(--ink3);font-style:italic;margin:0;">No context profile submitted yet. Share <strong>/profile</strong> with this student.</p></div>`;
+    profEl.style.display = 'block';
+  }
 
   // Anxiety chart
   const chart = document.getElementById('anx-chart');
