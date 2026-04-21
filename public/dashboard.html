@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1.0" />
+<title>Supervisor dashboard</title>
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0;background:#f5f4f0;font-family:system-ui,sans-serif;color:#1a1a1a;}
+  .wrap{max-width:760px;margin:0 auto;padding:2.5rem 1.25rem 4rem;}
+  .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;}
+  h1{font-size:22px;font-weight:500;margin:0;}
+  .logout{font-size:13px;color:#aaa;text-decoration:none;border:1px solid #ddd;border-radius:6px;padding:5px 12px;transition:all .15s;}
+  .logout:hover{background:#eee;color:#555;}
+  .metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:1.5rem;}
+  .mc{background:#fff;border:1px solid #e8e6e1;border-radius:10px;padding:14px;}
+  .ml{font-size:12px;color:#aaa;margin-bottom:4px;}
+  .mv{font-size:22px;font-weight:500;}
+  .ms{font-size:11px;color:#ccc;margin-top:2px;}
+  .alert{background:#FCEBEB;border:1px solid #F09595;border-radius:8px;padding:10px 14px;font-size:13px;color:#791F1F;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+  .adot{width:8px;height:8px;border-radius:50%;background:#E24B4A;flex-shrink:0;}
+  .sec-title{font-size:12px;font-weight:600;color:#aaa;text-transform:uppercase;letter-spacing:.06em;margin:0 0 12px;}
+  .sc{background:#fff;border:1px solid #e8e6e1;border-radius:10px;padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:border-color .15s;}
+  .sc:hover{border-color:#AFA9EC;}
+  .sch{display:flex;align-items:center;gap:12px;}
+  .av{width:38px;height:38px;border-radius:50%;background:#EEEDFE;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;color:#534AB7;flex-shrink:0;}
+  .si{flex:1;min-width:0;}
+  .sn{font-size:15px;font-weight:500;margin:0 0 2px;}
+  .sm{font-size:12px;color:#aaa;}
+  .abadge{display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0;}
+  .anum{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;color:#fff;}
+  .atr{font-size:11px;color:#aaa;text-align:center;}
+  .spwrap{margin-top:12px;padding-top:12px;border-top:1px solid #eee;display:none;}
+  .spwrap.open{display:block;}
+  .splbl{font-size:11px;color:#aaa;margin-bottom:6px;}
+  .spline{display:flex;align-items:flex-end;gap:4px;height:52px;}
+  .spcol{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;}
+  .spbar{width:100%;border-radius:3px 3px 0 0;min-height:3px;}
+  .spdt{font-size:10px;color:#ccc;white-space:nowrap;}
+  .empty{text-align:center;padding:3rem;color:#aaa;font-size:14px;}
+  .loading{text-align:center;padding:2rem;color:#aaa;font-size:14px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1>Supervisor dashboard</h1>
+    <a class="logout" href="/dashboard/logout">Sign out</a>
+  </div>
+  <div id="loading" class="loading">Loading…</div>
+  <div id="content" style="display:none;">
+    <div id="alerts"></div>
+    <div class="metrics">
+      <div class="mc"><div class="ml">Students</div><div class="mv" id="m1">—</div></div>
+      <div class="mc"><div class="ml">Total check-ins</div><div class="mv" id="m2">—</div></div>
+      <div class="mc"><div class="ml">Avg anxiety (latest)</div><div class="mv" id="m3">—</div><div class="ms" id="m3s"></div></div>
+    </div>
+    <div class="sec-title">Students — anxiety over time</div>
+    <div id="students"></div>
+  </div>
+  <div id="empty" style="display:none;" class="empty">No check-ins submitted yet.</div>
+</div>
+<script>
+const AC={1:'#1D9E75',2:'#1D9E75',3:'#639922',4:'#639922',5:'#BA7517',6:'#BA7517',7:'#D85A30',8:'#D85A30',9:'#E24B4A',10:'#A32D2D'};
+async function load(){
+  let data=[];
+  try{const r=await fetch('/api/dashboard');if(r.status===401){window.location.href='/dashboard';return;}data=await r.json();}catch(e){}
+  document.getElementById('loading').style.display='none';
+  if(!data.length){document.getElementById('empty').style.display='block';return;}
+  const total=data.reduce((a,s)=>a+s.checkins.length,0);
+  const la=data.map(s=>s.checkins[s.checkins.length-1]?.anxiety).filter(Boolean);
+  const avg=la.length?(la.reduce((a,b)=>a+b,0)/la.length).toFixed(1):'—';
+  document.getElementById('m1').textContent=data.length;
+  document.getElementById('m2').textContent=total;
+  document.getElementById('m3').textContent=avg;
+  document.getElementById('m3s').textContent='across '+data.length+' student'+(data.length!==1?'s':'');
+  const aa=document.getElementById('alerts');
+  data.forEach(s=>{
+    const l=s.checkins[s.checkins.length-1];
+    if(l?.anxiety>=8){const d=document.createElement('div');d.className='alert';d.innerHTML='<span class="adot"></span><strong>'+s.name+'</strong> reported anxiety '+l.anxiety+'/10 — consider reaching out.';aa.appendChild(d);}
+  });
+  const sl=document.getElementById('students');
+  data.forEach((s,i)=>{
+    const l=s.checkins[s.checkins.length-1];
+    const p=s.checkins.length>1?s.checkins[s.checkins.length-2]:null;
+    const a=l?.anxiety||null;
+    const ac=a?AC[a]:'#ccc';
+    const diff=p?.anxiety&&a?a-p.anxiety:null;
+    const tr=diff!==null?(diff>0?'▲ +'+diff:diff<0?'▼ '+diff:'no change'):'';
+    const init=s.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const ld=l?new Date(l.submitted_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'';
+    const bars=s.checkins.map(c=>{const v=c.anxiety||0;const h=Math.round((v/10)*52);const d=new Date(c.submitted_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'});return'<div class="spcol"><div class="spbar" style="height:'+h+'px;background:'+(AC[v]||'#ddd')+';"></div><div class="spdt">'+d+'</div></div>';}).join('');
+    const card=document.createElement('div');card.className='sc';
+    card.onclick=()=>document.getElementById('sp'+i).classList.toggle('open');
+    card.innerHTML='<div class="sch"><div class="av">'+init+'</div><div class="si"><div class="sn">'+s.name+'</div><div class="sm">'+s.checkins.length+' check-in'+(s.checkins.length!==1?'s':'')+' · last: '+ld+'</div></div><div class="abadge"><div class="anum" style="background:'+ac+';">'+(a||'—')+'</div><div class="atr">'+tr+'</div></div></div><div class="spwrap" id="sp'+i+'"><div class="splbl">Anxiety over time (1–10)</div><div class="spline">'+bars+'</div></div>';
+    sl.appendChild(card);
+  });
+  document.getElementById('content').style.display='block';
+}
+load();
+</script>
+</body>
+</html>
